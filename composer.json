@@ -1,0 +1,26 @@
+{
+    "name": "cartware/ringbuffer",
+    "description": "An implementation of a circular buffer",
+    "type": "library",
+    "version": "0.1.0",
+    "authors": [
+        {
+            "name": "Alexander Buch",
+            "email": "alexander.buch@cartware.de"
+        }
+    ],
+    "require": {
+        "php": "^7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cartware\\RingBuffer\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit --configuration=test/phpunit.xml.dist"
+    }
+}
