@@ -2,7 +2,6 @@
     "name": "cartware/ringbuffer",
     "description": "An implementation of a circular buffer",
     "type": "library",
-    "version": "0.1.0",
     "authors": [
         {
             "name": "Alexander Buch",
