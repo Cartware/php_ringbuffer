@@ -57,11 +57,32 @@ class RingBuffer
 
     /**
      * @param int $length
+     * @param bool $resetCursors
      * @return void
      */
-    private function initializeFixedArray(int $length)
+    private function initializeFixedArray(int $length = null, bool $resetCursors = true)
     {
+        if (null === $length) {
+            $length = $this->_length;
+        }
+
         $this->_data = new \SplFixedArray($length);
+
+        if ($resetCursors) {
+            $this->resetCursors();
+            $this->rewind();
+        }
+    }
+
+    /**
+     * Resets the internal start- and end-cursors
+     *
+     * @return void
+     */
+    private function resetCursors()
+    {
+        $this->_start = 0;
+        $this->_end = 0;
     }
 
     /**
@@ -111,6 +132,25 @@ class RingBuffer
     }
 
     /**
+     * Push multiple values
+     *
+     * @param array|\Traversable $values
+     * @return $this
+     */
+    public function pushValues($values): self
+    {
+        if (!is_array($values) && $values instanceof \Traversable) {
+            throw new \InvalidArgumentException('Values must be array or Traversable');
+        }
+
+        foreach ($values as $value) {
+            $this->push($value);
+        }
+
+        return $this;
+    }
+
+    /**
      * @return mixed
      */
     public function pop()
@@ -148,6 +188,102 @@ class RingBuffer
         return $this;
     }
 
+    /**
+     * Cast to array
+     *
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return $this->_data->toArray() ?? [];
+    }
+
+    /**
+     * Cast to JSON
+     *
+     * @return string
+     */
+    public function toJson(): string
+    {
+        return json_encode($this->toArray());
+    }
+
+    /**
+     * Filter the items inside the RingBuffer
+     *
+     * @param callable|null $fn
+     * @return self
+     */
+    public function filter(callable $fn = null): self
+    {
+        if (null === $fn) {
+            return $this;
+        }
+
+        $array = array_filter($this->_data->toArray(), $fn);
+        $this->initializeFixedArray($this->_length);
+        $this->pushValues($array);
+
+        return $this;
+    }
+
+    /**
+     * Map values inside the RingBuffer
+     *
+     * @param callable|null $fn
+     * @return self
+     */
+    public function map(callable $fn = null): self
+    {
+        if (null === $fn) {
+            return $this;
+        }
+
+        $array = array_map($fn, $this->_data->toArray());
+        $this->initializeFixedArray($this->_length, false);
+        $this->pushValues($array);
+
+        return $this;
+    }
+
+    /**
+     * Sort the values inside the RingBuffer
+     *
+     * @param callable|null $fn
+     * @param int $flags
+     * @return $this
+     */
+    public function sort(callable $fn = null, int $flags = 0): self
+    {
+        $array = $this->_data->toArray();
+
+        if (null === $fn) {
+            sort($array, $flags);
+        } else {
+            usort($array, $fn);
+        }
+
+        $this->initializeFixedArray($this->_length);
+        $this->pushValues($array);
+
+        return $this;
+    }
+
+    /**
+     * Create a RingBuffer with given values
+     *
+     * @param array|\Traversable $values
+     * @return self
+     */
+    public function withValues($values): self
+    {
+        $buffer = clone $this;
+        $buffer->initializeFixedArray();
+        $buffer->pushValues($values);
+
+        return $buffer;
+    }
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Implementation of <ArrayAccess>
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,12 +307,17 @@ class RingBuffer
     }
 
     /**
-     * @param int $offset
+     * @param int|null $offset
      * @param mixed $value
      * @return void
      */
     public function offsetSet($offset, $value)
     {
+        if (null === $offset) {
+            $this->push($value);
+            return;
+        }
+
         $this->_data[$offset] = $value;
     }
 
@@ -292,12 +433,14 @@ class RingBuffer
             }
         }
 
-        $this->initializeFixedArray($this->_length);
+        $this->initializeFixedArray($this->_length, false);
 
         foreach ($data['_data'] as $key => $value) {
             if ($key < $this->_length) {
                 $this->_data[$key] = $value;
             }
         }
+
+        return $this;
     }
 }
