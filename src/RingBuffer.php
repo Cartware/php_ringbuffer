@@ -44,7 +44,7 @@ class RingBuffer
     /**
      * Constructor
      */
-    public function __construct(int $length = NULL, $flags = 0)
+    public function __construct(?int $length = NULL, $flags = 0)
     {
         if ($length === NULL) {
             $length = static::DEFAULT_LENGTH; // static vs. self
@@ -60,7 +60,7 @@ class RingBuffer
      * @param bool $resetCursors
      * @return void
      */
-    private function initializeFixedArray(int $length = null, bool $resetCursors = true)
+    private function initializeFixedArray(?int $length = null, bool $resetCursors = true)
     {
         if (null === $length) {
             $length = $this->_length;
@@ -214,7 +214,7 @@ class RingBuffer
      * @param callable|null $fn
      * @return self
      */
-    public function filter(callable $fn = null): self
+    public function filter(?callable $fn = null): self
     {
         if (null === $fn) {
             return $this;
@@ -233,7 +233,7 @@ class RingBuffer
      * @param callable|null $fn
      * @return self
      */
-    public function map(callable $fn = null): self
+    public function map(?callable $fn = null): self
     {
         if (null === $fn) {
             return $this;
@@ -253,7 +253,7 @@ class RingBuffer
      * @param int $flags
      * @return $this
      */
-    public function sort(callable $fn = null, int $flags = 0): self
+    public function sort(?callable $fn = null, int $flags = 0): self
     {
         $array = $this->_data->toArray();
 
